@@ -1994,7 +1994,7 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
     heatmap_div.on('plotly_selected', heatmap_on_select);
   } else {
     /* update the plot: */
-    Plotly.update(heatmap_div, heatmap_update, heatmap_layout_update);
+    Plotly.react(heatmap_div, heatmap_data, heatmap_layout, heatmap_conf);
   };
 
   /* surface plot: */
@@ -2006,7 +2006,7 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
     plot_vars[fid]['surf_plot'] = surf_plot;
   } else {
     /* update the plot: */
-    Plotly.update(surf_div, surf_update, surf_layout);
+    Plotly.react(surf_div, surf_data, surf_layout, surf_conf);
   };
 
   /* scatter plot: */
