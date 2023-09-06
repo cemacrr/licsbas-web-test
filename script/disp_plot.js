@@ -473,11 +473,11 @@ function get_area_mean(var_area, var_data) {
       };
     };
   };
-  /* calculate mean, or return 0 if no values: */
+  /* calculate mean, or return NaN if no values: */
   if (var_count > 0) {
     var_mean = var_sum / var_count;
   } else {
-    var_mean = 0;
+    var_mean = NaN;
   };
   return var_mean;
 };
@@ -900,7 +900,7 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
     if (ref_count > 0) {
       ref_mean = ref_sum / ref_count;
     } else {
-      ref_mean = 0;
+      ref_mean = NaN;
     };
 
     /* init heatmap data variables: */
@@ -943,6 +943,9 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
         } else {
           heatmap_disp[i][j] = ((end_disp[i][j] - start_disp[i][j]) -
                                 ref_mean).toFixed(2);
+          if (isNaN(heatmap_disp[i][j]) == true) {
+            heatmap_disp[i][j] = 'null';
+          };
         };
         /* if this pixel is masked ... : */
         if (mask[i][j] == 0) {
@@ -1084,12 +1087,19 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
       /* value is data value - ref area mean for time step - ref area mean
          for start data: */
       var value_disp_out = value_disp - ref_mean - ts_ref_minus_disp;
+      if (isNaN(value_disp_out) == true) {
+        value_disp_out = 'null';
+      };
       /* add to ts data: */
       ts_disp.push(value_disp_out);
       /* add to ts dates: */
       ts_dates.push(dates[i]);
       /* add hover data: */
-      ts_hover.push(dates[i] + ', ' + value_disp_out.toFixed(2) + ' mm');
+      if (value_disp_out == 'null') {
+        ts_hover.push(dates[i] + ', null');
+      } else {
+        ts_hover.push(dates[i] + ', ' + value_disp_out.toFixed(2) + ' mm');
+      };
     /* end loop through time series: */
     };
   } else {
@@ -1758,8 +1768,8 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
     /* don't do anything if this is a masked pixel, unless selecting profile
        to plot: */
     if (mask[click_y][click_x] == 0 &&
-        plot_vars[fid]['click_mode'] != 'select' &&
-        plot_vars[fid]['scatter_type'] != 'profile') {
+        (plot_vars[fid]['click_mode'] != 'select' ||
+         plot_vars[fid]['scatter_type'] != 'profile')) {
       {};
     /* don't do anything if this is a null pixel, unless slecting profile to
        plot: */
@@ -1915,6 +1925,25 @@ function disp_plot(disp_type, heatmap_type, scatter_type,
 
       /* if current click mode is reference area selecting: */
       if (plot_vars[fid]['click_mode'] == 'ref') {
+
+        /* check we have valid reference data for at least one selected
+           pixel: */
+        var ref_null = true;
+        /* loop through selected values: */
+        for (var i = sel_y0; i < sel_y1 ; i++) {
+          for (var j = sel_x0; j < sel_x1; j++) {
+            /* if any non null values, things are o.k.: */
+            if (plot_vars[fid][plot_vars[fid]['disp_type']][plot_vars[fid]['start_index']][i][j] != 'null' &&
+                plot_vars[fid][plot_vars[fid]['disp_type']][plot_vars[fid]['end_index']][i][j] != 'null') {
+              ref_null = false;
+              break;
+            };
+          };
+        };
+        /* if all values are null, return: */
+        if (ref_null) {
+          return;
+        };
 
         /* update plot: */
         disp_plot(plot_vars[fid]['disp_type'],
